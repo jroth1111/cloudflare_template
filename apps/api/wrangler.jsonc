@@ -1,0 +1,116 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "northstar-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-06",
+  "compatibility_flags": ["nodejs_compat"],
+  /**
+   * Cloudflare Rate Limiting API bindings (Workers runtime binding).
+   *
+   * Used for auth endpoint protection (see `apps/api/src/features/auth/rate-limit.ts`).
+   * `namespace_id` must be a unique integer per Cloudflare account; adjust as needed.
+   *
+   * Docs:
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+   */
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "AUTH_SIGNIN_RATE_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": 1001,
+        "simple": { "limit": 5, "period": 60 }
+      },
+      {
+        "name": "AUTH_SIGNUP_RATE_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": 1002,
+        "simple": { "limit": 3, "period": 60 }
+      },
+      {
+        "name": "AUTH_TOKEN_RATE_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": 1003,
+        "simple": { "limit": 30, "period": 60 }
+      }
+    ]
+  },
+  "observability": { "enabled": true },
+  "upload_source_maps": true,
+  /**
+   * Bindings (D1/KV/DO).
+   *
+   * Replace placeholder IDs before deploying, or omit IDs to use Wrangler
+   * automatic provisioning.
+   */
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "northstar-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "kv_namespaces": [{ "binding": "KV", "id": "00000000000000000000000000000000" }],
+  "durable_objects": {
+    "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiterDO" }]
+  },
+  "migrations": [{ "tag": "v1", "new_classes": ["RateLimiterDO"] }],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "CORS_ORIGINS": "http://localhost:3000,http://localhost:5173,http://localhost:8787",
+    "AUTH_TRUSTED_ORIGINS": "http://localhost:3000,http://localhost:5173,http://localhost:8787"
+  },
+  "env": {
+    "production": {
+      "name": "northstar-api",
+      "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+      "workers_dev": false,
+      "routes": [],
+      "placement": { "mode": "smart" },
+      "unsafe": {
+        "bindings": [
+          {
+            "name": "AUTH_SIGNIN_RATE_LIMITER",
+            "type": "ratelimit",
+            "namespace_id": 1001,
+            "simple": { "limit": 5, "period": 60 }
+          },
+          {
+            "name": "AUTH_SIGNUP_RATE_LIMITER",
+            "type": "ratelimit",
+            "namespace_id": 1002,
+            "simple": { "limit": 3, "period": 60 }
+          },
+          {
+            "name": "AUTH_TOKEN_RATE_LIMITER",
+            "type": "ratelimit",
+            "namespace_id": 1003,
+            "simple": { "limit": 30, "period": 60 }
+          }
+        ]
+      },
+      "vars": {
+        "ENVIRONMENT": "production",
+        "CORS_ORIGINS": "",
+        "AUTH_TRUSTED_ORIGINS": ""
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "northstar-db",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "drizzle"
+        }
+      ],
+      "kv_namespaces": [{ "binding": "KV", "id": "00000000000000000000000000000000" }],
+      "durable_objects": {
+        "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiterDO" }]
+      }
+    }
+  }
+}

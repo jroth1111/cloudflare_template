@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+/* Tailwind v4 prefers CSS-first configuration. */
+@theme {
+  /* Brand + basic semantic colors. */
+  --color-brand: oklch(0.65 0.22 28);
+  --color-brand-foreground: oklch(0.98 0.01 28);
+  --color-background: oklch(0.99 0 0);
+  --color-foreground: oklch(0.15 0 0);
+
+  /* Typography. */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Animation example. */
+  --animate-fade-in: fade-in 150ms ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

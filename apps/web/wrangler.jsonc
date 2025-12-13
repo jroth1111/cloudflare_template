@@ -1,0 +1,42 @@
+/**
+ * Public "edge web" Worker.
+ *
+ * This Worker is intended to be the public entrypoint and should proxy `/api/*`
+ * to the private `apps/api` Worker via Service Bindings.
+ *
+ * Service bindings local dev:
+ * https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/#local-development
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "northstar-web",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-06",
+  "observability": { "enabled": true },
+  "upload_source_maps": true,
+  /**
+   * Serve a framework build output (static assets) from this public Worker while keeping the `/api/*`
+   * Service Binding proxy. Point `directory` at your framework’s build output (e.g.,
+   * `./dist`, `.output/public`, or the default `apps/web/public`), and `apps/web/src/index.ts` will fall
+   * back to `env.ASSETS.fetch(...)` for anything the Worker doesn’t explicitly handle.
+   *
+   * Docs:
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/static-assets/
+   */
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./public",
+    "not_found_handling": "single-page-application",
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": true
+  },
+  "services": [{ "binding": "API", "service": "northstar-api" }],
+  "vars": { "ENVIRONMENT": "development" },
+  "env": {
+    "production": {
+      "name": "northstar-web",
+      "vars": { "ENVIRONMENT": "production" },
+      "services": [{ "binding": "API", "service": "northstar-api", "environment": "production" }]
+    }
+  }
+}

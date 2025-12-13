@@ -1,0 +1,52 @@
+{
+  "name": "cloudflare-northstar-template",
+  "private": true,
+  "packageManager": "pnpm@10.25.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "wrangler dev -c apps/web/wrangler.jsonc -c apps/api/wrangler.jsonc",
+    "dev:e2e": "node scripts/dev-e2e.mjs",
+    "dev:api": "pnpm -C apps/api dev",
+    "dev:web": "pnpm -C apps/web dev",
+    "dev:remote:api": "pnpm -C apps/api dev:remote",
+    "deploy": "pnpm deploy:api && pnpm deploy:web",
+    "deploy:api": "pnpm -C apps/api deploy",
+    "deploy:web": "pnpm -C apps/web deploy",
+    "auth:schema": "pnpm -C apps/api auth:schema",
+    "db:generate": "pnpm -C apps/api db:generate",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local --config apps/api/wrangler.jsonc",
+    "db:migrate:local:e2e": "wrangler d1 migrations apply DB --local --persist-to .wrangler/state-e2e --config apps/api/wrangler.jsonc",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote --env production --config apps/api/wrangler.jsonc",
+    "test": "pnpm -C apps/api test",
+    "test:e2e": "pnpm db:migrate:local:e2e && playwright test",
+    "test:e2e:fast": "pnpm db:migrate:local:e2e && playwright test --project=chromium",
+    "test:e2e:headed": "pnpm db:migrate:local:e2e && playwright test --headed",
+    "test:e2e:ui": "pnpm db:migrate:local:e2e && playwright test --ui",
+    "test:e2e:debug": "pnpm db:migrate:local:e2e && playwright test --headed --debug",
+    "test:e2e:remote": "playwright test",
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json",
+    "typecheck": "pnpm -r typecheck && pnpm typecheck:e2e",
+    "lint:root": "eslint playwright.config.ts e2e",
+    "lint": "pnpm -r lint && pnpm lint:root",
+    "format:root": "prettier -w playwright.config.ts e2e tsconfig.e2e.json",
+    "format": "pnpm -r format && pnpm format:root",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm check:wrangler",
+    "check:wrangler": "wrangler deploy --dry-run --env production --config apps/api/wrangler.jsonc && wrangler deploy --dry-run --env production --config apps/web/wrangler.jsonc",
+    "deploy:with-migrations": "pnpm deploy && pnpm db:migrate:remote",
+    "dev:setup": "pnpm db:migrate:local && pnpm dev",
+    "cf:bootstrap": "node scripts/cf-bootstrap.mjs",
+    "package:zip": "node scripts/package-zip.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.10.2",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.18.1",
+    "wrangler": "^4.54.0"
+  }
+}

@@ -1,0 +1,2 @@
+export const AUTH_SESSION_CACHE_TTL_SECONDS = 60 * 5;
+

@@ -1,0 +1,43 @@
+{
+  "name": "@cloudflare-northstar/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:remote": "wrangler dev --remote",
+    "deploy": "wrangler deploy --minify --env production",
+    "deploy:dev": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "auth:schema": "pnpm dlx @better-auth/cli@1.4.7-beta.4 generate --config ./better-auth.config.ts --output ../../packages/db/src/schema/better-auth.ts --yes",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote --env production",
+    "test": "vitest",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "format": "prettier -w ."
+  },
+  "dependencies": {
+    "@cloudflare-northstar/db": "workspace:*",
+    "@cloudflare-northstar/shared": "workspace:*",
+    "better-auth": "1.4.7-beta.4",
+    "drizzle-orm": "^0.44.0",
+    "hono": "^4.10.7",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.21",
+    "@cloudflare/workers-types": "^4.20251213.0",
+    "drizzle-kit": "^0.31.4",
+    "prettier": "^3.4.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0",
+    "wrangler": "^4.54.0"
+  }
+}
