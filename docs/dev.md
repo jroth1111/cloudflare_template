@@ -110,7 +110,7 @@ pnpm db:migrate:remote
 
 - `placement: { mode: "smart" }` for latency-sensitive DB/network workloads
   - Trade-off: can increase user-to-worker latency for requests that do little/no backend work; see https://developers.cloudflare.com/workers/configuration/smart-placement/
-- `global_fetch_strictly_public` for SSRF hardening on outbound `fetch()`
+- `global_fetch_strictly_public` to route same-zone `fetch()` through Cloudflare's public edge (front door) so Workers/routes/security are applied consistently
 
 ## Safer rollouts
 

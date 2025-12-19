@@ -30,7 +30,7 @@ This template ships with secure defaults, but security is contextual. Use this a
 
 ## Outbound fetch SSRF hardening
 
-- In production, `apps/api` enables `global_fetch_strictly_public` to restrict `fetch()` to public IP ranges.
+- In production, `apps/api` enables `global_fetch_strictly_public` so same-zone `fetch()` goes through the public edge and respects Workers/routes/security.
 
 ## KV usage
 
