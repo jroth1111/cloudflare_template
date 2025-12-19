@@ -26,7 +26,7 @@ static pages and chunks via `env.ASSETS.fetch(...)`.
 
 - Proxy `/api/*` in your server entry / middleware to `platform.env.API.fetch(request)`.
 - Reuse schemas from `@cloudflare-northstar/shared`.
-- Import Tailwind theme from `@cloudflare-northstar/ui/styles.css`.
+- Import Tailwind theme tokens from `@cloudflare-northstar/ui/theme.css` (see `docs/tailwind.md`).
 
 ### SvelteKit
 
@@ -71,7 +71,7 @@ export const onRequest = async ({ request, platform, next }) => {
 - Auth: `apps/api` exposes `/api/auth/*` (proxy through your public Worker)
 - Validation: `@cloudflare-northstar/shared` (Zod schemas + helpers)
 - DB schema/types: `@cloudflare-northstar/db/schema`
-- Tailwind v4 theme: `@cloudflare-northstar/ui/styles.css`
+- Tailwind v4 theme: `@cloudflare-northstar/ui/theme.css` (or the convenience entrypoint `@cloudflare-northstar/ui/styles.css`)
 
 ## Bundler note: transpile workspace packages
 

@@ -1,0 +1,27 @@
+/* Monorepo entrypoint for Tailwind v4.
+ *
+ * Use this when you want one CSS entrypoint that:
+ * - disables auto detection (source(none))
+ * - explicitly registers all monorepo sources with `@source`
+ * - imports the shared theme tokens
+ */
+
+@import "tailwindcss" source(none);
+
+/* Monorepo source scanning (relative to this file: packages/ui/). */
+@source "../../apps/*/src/**/*.{js,jsx,ts,tsx,svelte,vue,mdx,astro}";
+@source "../../packages/*/src/**/*.{js,jsx,ts,tsx,svelte,vue,mdx,astro}";
+@source "../../apps/*/public/**/*.{html,js,css}";
+
+/* Ignore common non-source directories. */
+@source not "../../**/node_modules/**";
+@source not "../../**/.wrangler/**";
+@source not "../../**/dist/**";
+@source not "../../**/.output/**";
+@source not "../../**/.svelte-kit/**";
+@source not "../../**/.astro/**";
+@source not "../../**/*.test.*";
+@source not "../../**/*.spec.*";
+
+@import "./theme.css";
+

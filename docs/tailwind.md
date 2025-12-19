@@ -1,59 +1,96 @@
-# Tailwind CSS v4 (shared)
+# Tailwind CSS v4 (shared, CSS-first)
 
-This repo includes a shared Tailwind package:
+Tailwind v4 is designed for **CSS-first configuration**. This repo ships a shared UI/theme package you can import from any framework app:
 
-- `packages/ui/styles.css` (entrypoint: `@import "tailwindcss";`)
-- `packages/ui/tailwind.config.ts` (optional shared preset; many v4 setups can be CSS-only)
+- `packages/ui/theme.css` — shared `@theme` tokens (recommended)
+- `packages/ui/styles.css` — convenience entrypoint (`@import "tailwindcss";` + `theme.css`)
+- `packages/ui/monorepo.css` — monorepo entrypoint (disables auto-detection and declares `@source` paths)
+- `packages/ui/tailwind.config.ts` — optional legacy config placeholder (only if you need JS-based config)
 
 ## Tailwind v4 setup notes
 
-Tailwind v4 has a few important setup changes from v3:
+Compared to v3:
 
-- Use `@import "tailwindcss";` in your CSS entrypoint (instead of `@tailwind base/components/utilities`).
-- If you use PostCSS, configure the dedicated PostCSS plugin (`@tailwindcss/postcss`) — not `tailwindcss`.
-- You typically **do not** need `autoprefixer` or `postcss-import` anymore (v4 includes prefixing + import support).
+- Use `@import "tailwindcss";` (instead of `@tailwind base/components/utilities`).
+- If you use PostCSS, configure `@tailwindcss/postcss` — not `tailwindcss`.
+- You typically **do not** need `autoprefixer` or `postcss-import` (v4 includes prefixing + import support).
 
 Official docs:
 
-- https://tailwindcss.com/docs/installation/using-postcss
+- https://tailwindcss.com/blog/tailwindcss-v4
 - https://tailwindcss.com/docs/upgrade-guide
+- https://tailwindcss.com/docs/detecting-classes-in-source-files
 
-## Best practices (Tailwind v4 + Cloudflare Workers)
+## Recommended pattern (monorepo apps)
 
-- Build Tailwind at **compile time** (Vite/framework build); don’t run Tailwind in a Worker at runtime.
-- Prefer `@tailwindcss/vite` for Vite-based Cloudflare UIs; use PostCSS only when your framework requires it.
-- Keep shared design tokens in `packages/ui/styles.css` using `@theme`, and consume them via `@import "@cloudflare-northstar/ui/styles.css";`.
-- In monorepos, make scanning explicit with `@source` in your app CSS entrypoint for any shared packages you use.
-- Avoid v3-era patterns: `@tailwind base/components/utilities`, `tailwindcss` as a PostCSS plugin, `autoprefixer`, and `postcss-import`.
+Each app owns its Tailwind build and imports the shared theme tokens.
 
-## Use in a frontend app
-
-Install workspace deps and import the shared stylesheet from your app’s global CSS:
+Example app global CSS (adjust `@source` globs to your framework):
 
 ```css
-@import "@cloudflare-northstar/ui/styles.css";
+@import "tailwindcss" source(none);
+
+/* Scan this app + any shared packages that contain class strings. */
+@source "./src/**/*.{js,jsx,ts,tsx,svelte,vue,mdx,astro}";
+@source "../../packages/*/src/**/*.{js,jsx,ts,tsx,svelte,vue,mdx,astro}";
+@source not "../../**/*.test.*";
+@source not "../../**/*.spec.*";
+
+/* Shared tokens (colors/fonts/spacing/animations/dark variant). */
+@import "@cloudflare-northstar/ui/theme.css";
+```
+
+If you prefer one entrypoint that scans the whole repo, use `@import "@cloudflare-northstar/ui/monorepo.css";`.
+
+## Design tokens (`@theme`)
+
+`packages/ui/theme.css` defines common Tailwind v4 theme variables:
+
+- Brand palette: `--color-brand-50`…`--color-brand-950` (+ aliases `--color-brand`, `--color-brand-foreground`)
+- Semantic colors: `--color-success`, `--color-warning`, `--color-error`, `--color-info`
+- Fonts: `--font-sans`, `--font-mono`
+- Spacing base: `--spacing` (so `p-4` is `calc(var(--spacing) * 4)`)
+- Breakpoints: `--breakpoint-*`
+- Animations: `--animate-*` (+ easing `--ease-*`)
+
+Example usage:
+
+- `bg-background text-foreground`
+- `bg-brand text-brand-foreground`
+- `bg-brand-600 text-white`
+- `motion-safe:animate-fade-in`
+
+## Dark mode (no config file)
+
+`theme.css` defines a class-based dark variant:
+
+- `@custom-variant dark (&:where(.dark, .dark *));`
+
+To avoid a flash of incorrect theme when using class-based dark mode, set the theme class early (framework-specific).
+Minimal client-side example:
+
+```html
+<script>
+  (function () {
+    const saved = localStorage.getItem("theme");
+    const system = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.classList.add(saved ?? (system ? "dark" : "light"));
+  })();
+</script>
 ```
 
 ## Recommended (Vite): `@tailwindcss/vite`
 
-For Vite-based frameworks (SolidStart, SvelteKit, QwikCity, etc.), prefer the first-party Vite plugin
-and skip PostCSS entirely:
+For Vite-based frameworks (SolidStart, SvelteKit, QwikCity, etc.), prefer the first-party Vite plugin:
 
 ```ts
-// vite.config.ts
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({ plugins: [tailwindcss()] });
 ```
 
-`styles.css` includes an `@theme` block with a few starter tokens. Example usage:
-
-- `bg-background text-foreground`
-- `bg-brand text-brand-foreground`
-- `animate-fade-in`
-
-If you need plugins, add them in your app CSS (and install them in the consuming app):
+If you need Tailwind plugins, add them in your app CSS (and install them in the app):
 
 ```css
 @plugin "@tailwindcss/forms";
@@ -62,10 +99,9 @@ If you need plugins, add them in your app CSS (and install them in the consuming
 
 ## PostCSS config (example)
 
-If your framework expects a PostCSS config, use the v4 plugin:
+If your framework expects PostCSS, use the v4 plugin:
 
 ```js
-// postcss.config.mjs
 export default {
   plugins: {
     "@tailwindcss/postcss": {},
@@ -73,18 +109,17 @@ export default {
 };
 ```
 
-## Monorepo source scanning
+## Legacy config (`@config`)
 
-When a frontend needs Tailwind to scan shared packages, add `@source` directives in your CSS
-entrypoint (Tailwind v4 feature).
+If you need a JS/TS Tailwind config (rare in v4), you can load it from CSS:
 
-Docs:
+```css
+@config "../../tailwind.config.js";
+```
 
-- https://tailwindcss.com/docs/detecting-classes-in-source-files
+CSS-driven config (like `@theme`, `@source`, and `@plugin`) takes precedence where possible.
 
-## Two supported patterns
+## Workers static assets
 
-1. **Framework-managed Tailwind (recommended)**: each framework app owns the Tailwind build and just imports
-   `@cloudflare-northstar/ui/styles.css` for shared tokens/components.
-2. **Workers Assets + Tailwind build**: build your CSS into `apps/web/public/` (or your chosen assets directory)
-   and serve it via the `ASSETS` binding on the public Worker.
+Build your app’s CSS at compile time and serve it as a static asset from the public Worker (`apps/web`) via `ASSETS`.
+See `apps/web/wrangler.jsonc` for the assets binding pattern.

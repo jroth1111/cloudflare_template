@@ -23,6 +23,18 @@ in a stable release.
 - Cookie session caching enabled (`session.cookieCache`) to reduce DB hits
 - KV is configured as Better Auth **secondary storage** (best-effort cache) to further reduce D1 reads
 
+## Cookie hardening
+
+In production, Better Auth cookies are scoped using a `__Host-` cookie prefix plus strict defaults:
+
+- `Path=/`
+- `HttpOnly`
+- `SameSite=Lax`
+- `Secure` (forced via `advanced.useSecureCookies`)
+
+Note: in local development (`http://localhost`), the `__Host-` prefix is intentionally not used because
+browsers reject `__Host-`/`__Secure-` cookies that are not `Secure`.
+
 Server-side session retrieval example:
 
 ```ts
@@ -59,16 +71,16 @@ Workers-native rate limiter (Cloudflare Rate Limiting API) in front of Better Au
 Default behavior:
 
 - Enabled by default when `ENVIRONMENT=production` (set `AUTH_RATE_LIMIT_ENABLED=false` to disable)
-- Rate-limits by **IP + endpoint bucket**
-  - `POST /api/auth/sign-in/*` (bucket: `signin`)
-  - `POST /api/auth/sign-up/*` (bucket: `signup`)
-  - `GET|POST /api/auth/token` (bucket: `token`)
+- Rate-limits by **bucket + identity key** (Cloudflare recommends avoiding raw IP keys when possible)
+  - `POST /api/auth/sign-in/*` (bucket: `signin`) — key: `email:<normalizedEmail>` (fallback: `ip:<clientIp>`)
+  - `POST /api/auth/sign-up/*` (bucket: `signup`) — key: `email:<normalizedEmail>` (fallback: `ip:<clientIp>`)
+  - `GET|POST /api/auth/token` (bucket: `token`) — key: `ip:<clientIp>`
 - Fail-open: if the limiter errors, requests proceed (auth is not a single point of failure)
 
 Configuration:
 
 - `AUTH_RATE_LIMIT_ENABLED` (`true|false`, optional): force enable/disable regardless of `ENVIRONMENT`
-- Rate limit budgets live in `apps/api/wrangler.jsonc` under `unsafe.bindings` (type `ratelimit`):
+- Rate limit budgets live in `apps/api/wrangler.jsonc` under `ratelimits`:
   - `AUTH_SIGNIN_RATE_LIMITER`
   - `AUTH_SIGNUP_RATE_LIMITER`
   - `AUTH_TOKEN_RATE_LIMITER`

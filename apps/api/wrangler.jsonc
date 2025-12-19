@@ -7,7 +7,7 @@
   "name": "northstar-api",
   "main": "src/index.ts",
   "compatibility_date": "2025-09-06",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   /**
    * Cloudflare Rate Limiting API bindings (Workers runtime binding).
    *
@@ -17,35 +17,13 @@
    * Docs:
    * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
    */
-  "unsafe": {
-    "bindings": [
-      {
-        "name": "AUTH_SIGNIN_RATE_LIMITER",
-        "type": "ratelimit",
-        "namespace_id": 1001,
-        "simple": { "limit": 5, "period": 60 }
-      },
-      {
-        "name": "AUTH_SIGNUP_RATE_LIMITER",
-        "type": "ratelimit",
-        "namespace_id": 1002,
-        "simple": { "limit": 3, "period": 60 }
-      },
-      {
-        "name": "AUTH_TOKEN_RATE_LIMITER",
-        "type": "ratelimit",
-        "namespace_id": 1003,
-        "simple": { "limit": 30, "period": 60 }
-      }
-    ]
-  },
   "observability": { "enabled": true },
   "upload_source_maps": true,
   /**
    * Bindings (D1/KV/DO).
    *
-   * Replace placeholder IDs before deploying, or omit IDs to use Wrangler
-   * automatic provisioning.
+   * Replace placeholder IDs before deploying, or run `pnpm cf:bootstrap` to create
+   * resources and update this config automatically.
    */
   "d1_databases": [
     {
@@ -72,28 +50,23 @@
       "workers_dev": false,
       "routes": [],
       "placement": { "mode": "smart" },
-      "unsafe": {
-        "bindings": [
-          {
-            "name": "AUTH_SIGNIN_RATE_LIMITER",
-            "type": "ratelimit",
-            "namespace_id": 1001,
-            "simple": { "limit": 5, "period": 60 }
-          },
-          {
-            "name": "AUTH_SIGNUP_RATE_LIMITER",
-            "type": "ratelimit",
-            "namespace_id": 1002,
-            "simple": { "limit": 3, "period": 60 }
-          },
-          {
-            "name": "AUTH_TOKEN_RATE_LIMITER",
-            "type": "ratelimit",
-            "namespace_id": 1003,
-            "simple": { "limit": 30, "period": 60 }
-          }
-        ]
-      },
+      "ratelimits": [
+        {
+          "name": "AUTH_SIGNIN_RATE_LIMITER",
+          "namespace_id": "1001",
+          "simple": { "limit": 5, "period": 60 }
+        },
+        {
+          "name": "AUTH_SIGNUP_RATE_LIMITER",
+          "namespace_id": "1002",
+          "simple": { "limit": 3, "period": 60 }
+        },
+        {
+          "name": "AUTH_TOKEN_RATE_LIMITER",
+          "namespace_id": "1003",
+          "simple": { "limit": 30, "period": 60 }
+        }
+      ],
       "vars": {
         "ENVIRONMENT": "production",
         "CORS_ORIGINS": "",

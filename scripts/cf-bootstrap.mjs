@@ -12,12 +12,25 @@ function run(cmd, args) {
 }
 
 const config = "apps/api/wrangler.jsonc";
+const env = "production";
 
 console.log("\n== Cloudflare bootstrap (D1 + KV) ==");
 console.log(`Using config: ${config}\n`);
+console.log(`Target environment: ${env}\n`);
 
 console.log("Creating D1 database (updates config with DB binding)...");
-await run("wrangler", ["d1", "create", "northstar-db", "--config", config, "--binding", "DB", "--update-config"]);
+await run("wrangler", [
+  "d1",
+  "create",
+  "northstar-db",
+  "--config",
+  config,
+  "--env",
+  env,
+  "--binding",
+  "DB",
+  "--update-config"
+]);
 
 console.log("\nCreating KV namespace (updates config with KV binding)...");
 await run("wrangler", [
@@ -27,6 +40,8 @@ await run("wrangler", [
   "northstar-kv",
   "--config",
   config,
+  "--env",
+  env,
   "--binding",
   "KV",
   "--update-config"
@@ -41,6 +56,8 @@ await run("wrangler", [
   "--preview",
   "--config",
   config,
+  "--env",
+  env,
   "--binding",
   "KV",
   "--update-config"
@@ -54,4 +71,3 @@ console.log("- Deploy:");
 console.log("  - pnpm deploy");
 console.log("- Apply remote migrations:");
 console.log("  - pnpm db:migrate:remote\n");
-

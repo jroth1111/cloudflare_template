@@ -3,8 +3,10 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { getCorsOrigins } from "./env";
 import { HttpError } from "./lib/errors";
+import { logger } from "./lib/logger";
 import type { HonoEnv } from "./types";
 import { requestId } from "./middleware/request-id";
+import { requestLogger } from "./middleware/request-logger";
 import { bindContext } from "./middleware/bindings";
 import { csrfProtection } from "./middleware/security";
 import { authRoutes } from "./features/auth/routes";
@@ -17,6 +19,7 @@ export function createApp() {
   const app = new Hono<HonoEnv>();
 
   app.use("*", requestId);
+  app.use("*", requestLogger);
   app.use("*", secureHeaders());
   app.use("*", bindContext);
   app.use(
@@ -30,9 +33,10 @@ export function createApp() {
         if (allowed === "*") return origin;
         return allowed.includes(origin) ? origin : undefined;
       },
-      allowHeaders: ["Content-Type", "Authorization", "x-request-id"],
+      allowHeaders: ["Content-Type", "Authorization", "x-request-id", "x-d1-bookmark"],
       exposeHeaders: [
         "x-request-id",
+        "x-d1-bookmark",
         "x-ratelimit-limit",
         "x-ratelimit-remaining",
         "x-ratelimit-reset",
@@ -68,7 +72,16 @@ export function createApp() {
       );
     }
 
-    console.error("request error", requestId, err);
+    const { pathname } = new URL(c.req.raw.url);
+    logger.error("unhandled_error", {
+      requestId,
+      method: c.req.method,
+      path: pathname,
+      traceparent: c.req.header("traceparent") ?? null,
+      userId: c.get("user")?.id ?? null,
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined
+    });
     return c.json(
       { error: { code: "internal_error", message: "Internal error", requestId } },
       500

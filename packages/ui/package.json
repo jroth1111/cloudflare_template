@@ -4,9 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
+    "./theme.css": "./theme.css",
     "./styles.css": "./styles.css",
+    "./monorepo.css": "./monorepo.css",
     "./tailwind.config": "./tailwind.config.ts"
   },
+  "sideEffects": ["**/*.css"],
   "dependencies": {
     "tailwindcss": "^4.1.18"
   },

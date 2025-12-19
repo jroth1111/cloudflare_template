@@ -51,38 +51,22 @@ it("rate-limits repeated sign-in attempts", async () => {
 });
 
 it("supports x-northstar-client-ip for split-worker rate limiting", async () => {
-  const email = `vitest-rl-proxy-${Date.now()}@example.com`;
-  const password = "password1234";
   const ip = "203.0.113.10";
 
-  const signUp = await SELF.fetch("http://example.com/api/auth/sign-up/email", {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-northstar-client-ip": ip },
-    body: JSON.stringify({ name: "Proxy Rate Limit User", email, password })
-  });
-  expect(signUp.status).toBeGreaterThanOrEqual(200);
-  expect(signUp.status).toBeLessThan(500);
-
-  const signIn1 = await SELF.fetch("http://example.com/api/auth/sign-in/email", {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-northstar-client-ip": ip },
-    body: JSON.stringify({ email, password })
-  });
-  expect(signIn1.status).toBe(200);
-
-  for (let i = 1; i < SIGNIN_LIMIT; i += 1) {
+  // Use a non-JSON body so the middleware can't derive an email key and falls back to client IP.
+  for (let i = 0; i < SIGNIN_LIMIT; i += 1) {
     const res = await SELF.fetch("http://example.com/api/auth/sign-in/email", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-northstar-client-ip": ip },
-      body: JSON.stringify({ email, password })
+      headers: { "content-type": "text/plain", "x-northstar-client-ip": ip },
+      body: "not-json"
     });
-    expect(res.status).toBe(200);
+    expect(res.status).not.toBe(429);
   }
 
   const blocked = await SELF.fetch("http://example.com/api/auth/sign-in/email", {
     method: "POST",
-    headers: { "content-type": "application/json", "x-northstar-client-ip": ip },
-    body: JSON.stringify({ email, password })
+    headers: { "content-type": "text/plain", "x-northstar-client-ip": ip },
+    body: "not-json"
   });
   expect(blocked.status).toBe(429);
 });

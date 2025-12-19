@@ -16,14 +16,17 @@ export default defineWorkersProject(async () => {
             environment: "production"
           },
           miniflare: {
-            bindings: {
-              TEST_MIGRATIONS: migrations,
-              BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-1234",
-              BETTER_AUTH_URL: "https://example.com",
-              AUTH_RATE_LIMIT_ENABLED: "true"
+                bindings: {
+                  TEST_MIGRATIONS: migrations,
+                  BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-1234",
+                  BETTER_AUTH_URL: "https://example.com",
+                  AUTH_RATE_LIMIT_ENABLED: "true",
+                  REQUEST_LOG_ENABLED: "false",
+                  CORS_ORIGINS: "https://example.com",
+                  AUTH_TRUSTED_ORIGINS: "https://example.com",
+                }
+              }
             }
-          }
-        }
       }
     }
   };

@@ -11,6 +11,7 @@ export default tseslint.config(
       "**/dist/**",
       "**/.output/**",
       "**/.svelte-kit/**",
+      "**/public/**",
       "**/worker-configuration.d.ts"
     ]
   },
@@ -23,4 +24,3 @@ export default tseslint.config(
     }
   }
 );
-

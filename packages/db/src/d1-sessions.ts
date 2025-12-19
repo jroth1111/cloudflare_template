@@ -23,6 +23,13 @@ export function attachD1BookmarkHeader(
   headerName: string = D1_BOOKMARK_HEADER
 ): Response {
   const headers = new Headers(response.headers);
+  const setCookies = (
+    response.headers as unknown as { getSetCookie?: (this: Headers) => string[] }
+  ).getSetCookie?.call(response.headers);
+  if (setCookies?.length) {
+    headers.delete("set-cookie");
+    for (const cookie of setCookies) headers.append("set-cookie", cookie);
+  }
   headers.set(headerName, session.getBookmark() ?? "");
   return new Response(response.body, {
     status: response.status,
@@ -33,14 +40,22 @@ export function attachD1BookmarkHeader(
 
 export async function retryWhile<T>(
   fn: () => Promise<T>,
-  shouldRetry: (err: unknown, attempt: number) => boolean
+  shouldRetry: (err: unknown, attempt: number) => boolean,
+  options: { baseDelayMs?: number; maxDelayMs?: number; jitter?: boolean } = {}
 ): Promise<T> {
+  const baseDelayMs = options.baseDelayMs ?? 50;
+  const maxDelayMs = options.maxDelayMs ?? 2_000;
+  const jitter = options.jitter ?? true;
+
   let attempt = 1;
   while (true) {
     try {
       return await fn();
     } catch (err) {
       if (!shouldRetry(err, attempt)) throw err;
+      const cap = Math.min(maxDelayMs, baseDelayMs * 2 ** (attempt - 1));
+      const delayMs = jitter ? Math.floor(Math.random() * cap) : Math.floor(cap);
+      if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
       attempt += 1;
     }
   }
@@ -55,4 +70,3 @@ export function shouldRetryD1SessionError(err: unknown, attempt: number): boolea
     msg.includes("reset because its code was updated")
   );
 }
-

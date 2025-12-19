@@ -23,36 +23,50 @@ app.use("*", async (c, next) => {
   }
 });
 
-app.use("*", secureHeaders());
+app.use(
+  "*",
+  secureHeaders({
+    // Content Security Policy (strict by default; keep demo assets as static files)
+    contentSecurityPolicy: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'self'"],
+      baseUri: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  })
+);
 
 app.get("/", (c) => {
+  const vars = getValidatedVars(c.env);
+  const demoLink =
+    vars.ENVIRONMENT !== "production" ? '<a href="/demo">/demo</a>, ' : "";
+
   return c.html(
-    `<!doctype html><html><head><meta charset="utf-8" /><title>Northstar</title></head><body><h1>Northstar Web</h1><p>Try <a href="/demo">/demo</a>, <a href="/api/todos">/api/todos</a>, or <a href="/api/auth/jwks">/api/auth/jwks</a>.</p></body></html>`
+    `<!doctype html><html><head><meta charset="utf-8" /><title>Northstar</title></head><body><h1>Northstar Web</h1><p>Try ${demoLink}<a href="/api/todos">/api/todos</a>, or <a href="/api/auth/jwks">/api/auth/jwks</a>.</p></body></html>`
   );
 });
 
 app.get("/demo", (c) => {
+  // Gate demo page in production - it's only for development/E2E testing
+  const vars = getValidatedVars(c.env);
+  if (vars.ENVIRONMENT === "production") {
+    return c.text("Not Found", 404);
+  }
+
   return c.html(`<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Northstar Demo</title>
-    <style>
-      :root { color-scheme: light dark; }
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; max-width: 52rem; }
-      fieldset { border: 1px solid rgba(127,127,127,.4); border-radius: 12px; padding: 1rem; margin: 1rem 0; }
-      legend { font-weight: 600; padding: 0 .5rem; }
-      label { display: block; margin: .5rem 0 .25rem; }
-      input { width: 100%; padding: .6rem .75rem; border-radius: 10px; border: 1px solid rgba(127,127,127,.4); }
-      button { margin-top: .75rem; padding: .6rem .9rem; border-radius: 10px; border: 1px solid rgba(127,127,127,.4); background: transparent; cursor: pointer; }
-      button:hover { filter: brightness(0.98); }
-      .row { display: grid; grid-template-columns: 1fr; gap: .75rem; }
-      .status { margin-top: .5rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
-      .muted { opacity: .7; }
-      ul { padding-left: 1.25rem; }
-      code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    </style>
+    <link rel="stylesheet" href="/demo/demo.css" />
   </head>
   <body>
     <h1>Northstar Demo</h1>
@@ -114,123 +128,7 @@ app.get("/demo", (c) => {
       <div id="todo-status" class="status" aria-live="polite"></div>
     </fieldset>
 
-    <script>
-      (function () {
-        document.body.classList.add("hydrated");
-
-        const out = {
-          suStatus: document.getElementById("su-status"),
-          siStatus: document.getElementById("si-status"),
-          todoStatus: document.getElementById("todo-status"),
-          meEmail: document.querySelector('[data-testid="me-email"]'),
-          meError: document.querySelector('[data-testid="me-error"]'),
-          todoList: document.getElementById("todo-list"),
-        };
-
-        const el = {
-          suName: document.getElementById("su-name"),
-          suEmail: document.getElementById("su-email"),
-          suPassword: document.getElementById("su-password"),
-          siEmail: document.getElementById("si-email"),
-          siPassword: document.getElementById("si-password"),
-          todoTitle: document.getElementById("todo-title"),
-        };
-
-        async function readJson(res) {
-          const text = await res.text();
-          try {
-            return text ? JSON.parse(text) : null;
-          } catch {
-            return { raw: text };
-          }
-        }
-
-        async function postJson(path, body) {
-          return await fetch(path, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(body),
-          });
-        }
-
-        async function getJson(path) {
-          return await fetch(path, { credentials: "include" });
-        }
-
-        async function refreshMe() {
-          out.meEmail.textContent = "";
-          out.meError.textContent = "";
-          const res = await getJson("/api/me");
-          const json = await readJson(res);
-          if (res.ok) {
-            out.meEmail.textContent = json?.user?.email ?? "";
-            return;
-          }
-          out.meError.textContent = json?.error?.code ?? "unknown_error";
-        }
-
-        async function refreshTodos() {
-          const res = await getJson("/api/todos");
-          const todos = await readJson(res);
-          out.todoList.innerHTML = "";
-          if (!Array.isArray(todos)) return;
-          for (const t of todos) {
-            const li = document.createElement("li");
-            li.textContent = t.title;
-            out.todoList.appendChild(li);
-          }
-        }
-
-        document.getElementById("su-submit").addEventListener("click", async () => {
-          out.suStatus.textContent = "Signing up…";
-          const res = await postJson("/api/auth/sign-up/email", {
-            name: el.suName.value,
-            email: el.suEmail.value,
-            password: el.suPassword.value,
-          });
-          const json = await readJson(res);
-          out.suStatus.textContent = res.ok ? "Signed up." : JSON.stringify(json);
-        });
-
-        document.getElementById("si-submit").addEventListener("click", async () => {
-          out.siStatus.textContent = "Signing in…";
-          const res = await postJson("/api/auth/sign-in/email", {
-            email: el.siEmail.value,
-            password: el.siPassword.value,
-          });
-          const json = await readJson(res);
-          out.siStatus.textContent = res.ok ? "Signed in." : JSON.stringify(json);
-        });
-
-        document.getElementById("so-submit").addEventListener("click", async () => {
-          out.siStatus.textContent = "Signing out…";
-          const res = await postJson("/api/auth/sign-out", {});
-          const json = await readJson(res);
-          out.siStatus.textContent = res.ok ? "Signed out." : JSON.stringify(json);
-        });
-
-        document.getElementById("me-submit").addEventListener("click", async () => {
-          out.siStatus.textContent = "Fetching session…";
-          await refreshMe();
-          out.siStatus.textContent = "Done.";
-        });
-
-        document.getElementById("todo-create").addEventListener("click", async () => {
-          out.todoStatus.textContent = "Creating todo…";
-          const res = await postJson("/api/todos", { title: el.todoTitle.value });
-          const json = await readJson(res);
-          out.todoStatus.textContent = res.ok ? "Created." : JSON.stringify(json);
-          await refreshTodos();
-        });
-
-        document.getElementById("todo-refresh").addEventListener("click", async () => {
-          out.todoStatus.textContent = "Refreshing…";
-          await refreshTodos();
-          out.todoStatus.textContent = "Done.";
-        });
-      })();
-    </script>
+    <script src="/demo/demo.js"></script>
   </body>
 </html>`);
 });

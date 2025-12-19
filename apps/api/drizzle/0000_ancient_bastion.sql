@@ -63,5 +63,10 @@ CREATE TABLE `todos` (
 	`id` text PRIMARY KEY NOT NULL,
 	`title` text NOT NULL,
 	`completed` integer DEFAULT false NOT NULL,
-	`created_at` integer NOT NULL
+	`created_at` integer NOT NULL,
+	`user_id` text NOT NULL,
+	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
 );
+--> statement-breakpoint
+CREATE INDEX `todos_user_id_idx` ON `todos` (`user_id`);--> statement-breakpoint
+CREATE INDEX `todos_created_at_idx` ON `todos` (`created_at`);

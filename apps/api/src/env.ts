@@ -17,6 +17,8 @@ export type Bindings = {
   CORS_ORIGINS: string;
   AUTH_TRUSTED_ORIGINS?: string;
   AUTH_RATE_LIMIT_ENABLED?: "true" | "false";
+  D1_SESSIONS_ENABLED?: "true" | "false";
+  REQUEST_LOG_ENABLED?: "true" | "false";
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
 };
@@ -26,6 +28,8 @@ const varsSchema = z.object({
   CORS_ORIGINS: z.string().default(""),
   AUTH_TRUSTED_ORIGINS: z.string().optional().default(""),
   AUTH_RATE_LIMIT_ENABLED: z.enum(["true", "false"]).optional(),
+  D1_SESSIONS_ENABLED: z.enum(["true", "false"]).optional(),
+  REQUEST_LOG_ENABLED: z.enum(["true", "false"]).optional(),
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url()
 }).superRefine((vars, ctx) => {

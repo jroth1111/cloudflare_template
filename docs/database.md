@@ -51,7 +51,17 @@ This template includes small helpers in `packages/db/src/d1-sessions.ts`:
 
 - `createD1SessionFromRequest(db, request)` (reads `x-d1-bookmark`)
 - `attachD1BookmarkHeader(response, session)` (sets `x-d1-bookmark`)
-- `retryWhile(..., shouldRetryD1SessionError)` (transient retry helper)
+- `retryWhile(..., shouldRetryD1SessionError)` (transient retry helper w/ exponential backoff + jitter)
+
+To wire this into the API request pipeline, set `D1_SESSIONS_ENABLED=true` for `apps/api`.
+When enabled, the API Worker will:
+
+- Read `x-d1-bookmark` from the incoming request (defaulting to `first-unconstrained`)
+- Run D1 queries inside a session (`env.DB.withSession(bookmark)`)
+- Return the updated bookmark on the response as `x-d1-bookmark`
 
 Reference implementation:
 https://developers.cloudflare.com/d1/best-practices/read-replication/#use-sessions-api
+
+Retry guidance:
+https://developers.cloudflare.com/d1/best-practices/retry-queries/

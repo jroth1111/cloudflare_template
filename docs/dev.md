@@ -67,26 +67,21 @@ Use `.env` only for Node-side CLIs (optional), and `.dev.vars` for Worker runtim
 
 ## Provision Cloudflare resources (D1 + KV)
 
-Option A (explicit IDs): create resources in your Cloudflare account:
-
-```bash
-wrangler d1 create northstar-db
-wrangler kv namespace create northstar-kv
-```
-
-Then copy the returned IDs into `apps/api/wrangler.jsonc`:
-
-- `d1_databases[0].database_id`
-- `kv_namespaces[0].id`
-
-You can also run an optional helper that creates resources and updates `apps/api/wrangler.jsonc`:
+Recommended (happy path): run the helper to create D1 + KV and update `apps/api/wrangler.jsonc`:
 
 ```bash
 pnpm cf:bootstrap
 ```
 
-Option B (automatic provisioning): delete the `database_id` / `id` fields from
-`apps/api/wrangler.jsonc` and let Wrangler provision resources on first deploy.
+Or create resources manually and update `apps/api/wrangler.jsonc` (production env) directly:
+
+```bash
+wrangler d1 create northstar-db --env production --config apps/api/wrangler.jsonc --binding DB --update-config
+wrangler kv namespace create northstar-kv --env production --config apps/api/wrangler.jsonc --binding KV --update-config
+wrangler kv namespace create northstar-kv-preview --preview --env production --config apps/api/wrangler.jsonc --binding KV --update-config
+```
+
+Note: local `wrangler dev` uses local D1/KV by default, so placeholder IDs in the top-level config are fine.
 
 ## Deploy
 
@@ -111,7 +106,7 @@ pnpm db:migrate:remote
 
 ## Production knobs
 
-`apps/api/wrangler.jsonc` enables a few production-only best practices:
+`apps/api/wrangler.jsonc` enables a few best practices (some production-only):
 
 - `placement: { mode: "smart" }` for latency-sensitive DB/network workloads
   - Trade-off: can increase user-to-worker latency for requests that do little/no backend work; see https://developers.cloudflare.com/workers/configuration/smart-placement/
@@ -125,6 +120,15 @@ Wrangler supports versioned rollouts:
 wrangler versions upload --config apps/web/wrangler.jsonc --env production
 wrangler versions deploy --config apps/web/wrangler.jsonc --env production
 ```
+
+## CI
+
+This repo ships with a GitHub Actions workflow (`.github/workflows/ci.yml`) that runs:
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm check:wrangler` (Wrangler dry-run config/build validation)
 
 ## Package the template
 
