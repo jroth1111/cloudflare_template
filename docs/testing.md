@@ -15,7 +15,7 @@ pnpm test
 
 ```bash
 pnpm install
-cp apps/api/.dev.vars.example apps/api/.dev.vars
+cp .dev.vars.example .dev.vars
 pnpm db:migrate:local
 pnpm dev
 ```
@@ -44,7 +44,7 @@ pnpm test:e2e
 Notes:
 
 - For a quick local run (Chromium only): `pnpm test:e2e:fast`
-- Local E2E uses `pnpm dev:e2e` (starts both Workers and writes a temporary `apps/api/.dev.vars` if missing).
+- Local E2E uses `pnpm dev:e2e` (starts both Workers and writes a temporary `.dev.vars` if missing).
 - To run against a deployed environment, set `E2E_BASE_URL` and run `pnpm test:e2e:remote`.
   - Local E2E uses an isolated persistence dir: `.wrangler/state-e2e/` (so it doesn't collide with normal `wrangler dev` state).
 

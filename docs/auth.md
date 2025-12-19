@@ -133,7 +133,7 @@ JWT token endpoint:
   - In production, this must be an `https://...` URL.
 - `AUTH_TRUSTED_ORIGINS` (var, optional): comma-separated allowlist for cookie-based write requests (CSRF mitigation)
 
-Local secrets live in `apps/api/.dev.vars`.
+Local secrets live in `.dev.vars` at the repo root.
 
 ## Frontend integration
 

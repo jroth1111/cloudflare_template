@@ -171,9 +171,10 @@ function validateConfig(configPath, env = "production") {
 
       // Warn about missing secrets (only for API worker that has auth)
       warnings.push(
-        `Ensure these secrets are set in production:\n` +
-          `  - BETTER_AUTH_SECRET (run: wrangler secret put BETTER_AUTH_SECRET)\n` +
-          `  - BETTER_AUTH_URL (run: wrangler secret put BETTER_AUTH_URL)`
+        `Ensure these secrets are set in production (bulk upload):\n` +
+          `  - BETTER_AUTH_SECRET\n` +
+          `  - BETTER_AUTH_URL\n` +
+          `  Run: pnpm secrets:bulk (reads .dev.vars or process env)`
       );
     }
   }

@@ -36,7 +36,7 @@ This repo is a Cloudflare Workers monorepo optimized for **security**, **perform
 - **Security defaults**
   - Cookie-based state-changing requests require a trusted `Origin` (`AUTH_TRUSTED_ORIGINS`) to mitigate CSRF.
   - Errors use a stable envelope: `{ error: { code, message, requestId } }` and responses include `x-request-id`.
-- **Secrets**: never commit secrets; use `.dev.vars` locally and `wrangler secret put` remotely
+- **Secrets**: never commit secrets; use `.dev.vars` locally and `wrangler secret bulk` (via `pnpm secrets:bulk`) remotely
   - Prefer `env` bindings + Zod parsing. Even though `nodejs_compat` can populate `process.env`, treat
     it as a compatibility escape hatch (or for Node-side CLIs), not a primary config mechanism.
 

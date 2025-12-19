@@ -5,7 +5,7 @@ This template ships with secure defaults, but security is contextual. Use this a
 ## Secrets and env vars
 
 - Never commit `.dev.vars`.
-- Use `wrangler secret put` for production secrets (ex: `BETTER_AUTH_SECRET`).
+- Use `wrangler secret bulk` for production secrets (ex: `BETTER_AUTH_SECRET`) via `pnpm secrets:bulk` with CI-provided env vars or a `DEV_VARS` file.
 - Validate env vars with Zod at runtime (see `apps/api/src/env.ts`).
 
 ## Cookies, sessions, and CSRF

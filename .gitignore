@@ -55,7 +55,6 @@ test-results/
 # Local env for CLIs
 .env
 .env.*
-!.env.example
 
 # Local MCP config (may contain API keys)
 .mcp.json

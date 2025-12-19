@@ -1,17 +1,17 @@
 import { spawn } from "node:child_process";
 import { readFile, rm, writeFile } from "node:fs/promises";
 
-const apiDevVarsPath = new URL("../apps/api/.dev.vars", import.meta.url);
+const envPath = new URL("../.dev.vars", import.meta.url);
 const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:8787";
 const secret = process.env.BETTER_AUTH_SECRET ?? "test-secret-test-secret-test-secret-1234";
 
-let createdDevVars = false;
+let createdEnvFile = false;
 const MARKER = "# E2E-only dev vars (auto-generated).";
 
-async function ensureDevVars() {
+async function ensureEnvFile() {
   try {
-    const existing = await readFile(apiDevVarsPath, "utf8");
-    if (existing.startsWith(MARKER)) createdDevVars = true;
+    const existing = await readFile(envPath, "utf8");
+    if (existing.startsWith(MARKER)) createdEnvFile = true;
     return;
   } catch {
     // fall through
@@ -25,13 +25,13 @@ async function ensureDevVars() {
     "",
   ].join("\n");
 
-  await writeFile(apiDevVarsPath, contents, "utf8");
-  createdDevVars = true;
+  await writeFile(envPath, contents, "utf8");
+  createdEnvFile = true;
 }
 
 async function cleanup() {
-  if (!createdDevVars) return;
-  await rm(apiDevVarsPath, { force: true });
+  if (!createdEnvFile) return;
+  await rm(envPath, { force: true });
 }
 
 process.on("SIGINT", async () => {
@@ -47,7 +47,7 @@ process.on("exit", () => {
   void cleanup();
 });
 
-await ensureDevVars();
+await ensureEnvFile();
 
 const child = spawn(
   "wrangler",
@@ -57,6 +57,8 @@ const child = spawn(
     "apps/web/wrangler.jsonc",
     "-c",
     "apps/api/wrangler.jsonc",
+    "--env-file",
+    ".dev.vars",
     "--port",
     "8787",
     "--persist-to",

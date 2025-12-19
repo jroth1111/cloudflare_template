@@ -1,19 +1,24 @@
 # Cloudflare Northstar Template - Environment Variables
 # =====================================================
 #
-# Copy this file to .env (or apps/api/.dev.vars for Wrangler) and fill in the values.
+# Copy this file to .dev.vars at the repo root and fill in the values.
+# This file is loaded automatically by `pnpm dev` via `--env-file`.
 #
 # For local development:
-#   1. Copy apps/api/.dev.vars.example to apps/api/.dev.vars
+#   1. Copy .dev.vars.example to .dev.vars
 #   2. Fill in the values below
 #   3. Run: pnpm dev
 #
 # For production deployment:
 #   1. Run: pnpm cf:bootstrap (creates D1 database and KV namespace)
 #   2. Update apps/api/wrangler.jsonc with real resource IDs
-#   3. Set secrets via: wrangler secret put BETTER_AUTH_SECRET
+#   3. Upload secrets via: pnpm secrets:bulk (reads .dev.vars or process env)
 #   4. Set environment vars in wrangler.jsonc production env
 #   5. Run: pnpm deploy
+#
+# CI tip:
+#   Store the full contents of this file as a single secret (ex: DEV_VARS),
+#   then write it to .dev.vars in your CI workflow before running pnpm secrets:bulk.
 
 # =============================================================================
 # BETTER AUTH (required)

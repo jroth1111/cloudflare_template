@@ -6,12 +6,13 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "wrangler dev -c apps/web/wrangler.jsonc -c apps/api/wrangler.jsonc",
+    "dev": "wrangler dev --env-file .dev.vars -c apps/web/wrangler.jsonc -c apps/api/wrangler.jsonc",
     "dev:e2e": "node scripts/dev-e2e.mjs",
     "dev:api": "pnpm -C apps/api dev",
     "dev:web": "pnpm -C apps/web dev",
     "dev:remote:api": "pnpm -C apps/api dev:remote",
     "pre-deploy": "node scripts/pre-deploy-check.mjs",
+    "secrets:bulk": "node scripts/secrets-bulk.mjs",
     "deploy": "pnpm pre-deploy && pnpm deploy:api && pnpm deploy:web",
     "deploy:api": "pnpm -C apps/api deploy",
     "deploy:web": "pnpm -C apps/web deploy",

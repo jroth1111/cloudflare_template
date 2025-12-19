@@ -64,9 +64,8 @@ await run("wrangler", [
 ]);
 
 console.log("\nNext steps:");
-console.log("- Add secrets:");
-console.log("  - wrangler secret put BETTER_AUTH_SECRET --config apps/api/wrangler.jsonc --env production");
-console.log("  - wrangler secret put BETTER_AUTH_URL --config apps/api/wrangler.jsonc --env production");
+console.log("- Add secrets (bulk upload):");
+console.log("  - pnpm secrets:bulk (reads .dev.vars or process env)");
 console.log("- Deploy:");
 console.log("  - pnpm deploy");
 console.log("- Apply remote migrations:");

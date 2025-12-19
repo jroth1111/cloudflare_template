@@ -20,7 +20,7 @@ Split-worker rationale: keep the public entrypoint thin while routing `/api/*` t
 - KV and Durable Objects included as first-class patterns
 - Better Auth with D1-backed schema/migrations and session/token guidance
 - Wrangler config optimized for local dev and production deploys
-- Secrets handling via `.dev.vars` locally and `wrangler secret` remotely
+- Secrets handling via `.dev.vars` locally and `pnpm secrets:bulk` remotely (CI-friendly)
 - Testing scaffolding for Workers, D1/Drizzle, Durable Objects, and Playwright E2E
 
 ## Quick architecture
@@ -73,12 +73,34 @@ if (url.pathname.startsWith("/api/")) return env.API.fetch(request);
 
 ```bash
 pnpm install
-cp apps/api/.dev.vars.example apps/api/.dev.vars
+cp .dev.vars.example .dev.vars
 pnpm db:migrate:local
 pnpm dev
 ```
 
 Then open `http://localhost:8787` (try `/demo`).
+
+## Setup checklist
+
+Local dev:
+
+```bash
+cp .dev.vars.example .dev.vars
+```
+
+- Required keys: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+- Production requirement (when you switch to prod): `BETTER_AUTH_URL` must be `https://`
+
+Production deploy:
+
+- CI secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `DEV_VARS`
+  - `DEV_VARS` should contain the full `.dev.vars` content (same format as local, including newlines)
+  - Create it in GitHub: Settings > Secrets and variables > Actions > New repository secret
+- Keep `DEV_VARS` in sync when you add new keys to `.dev.vars`
+- The deploy workflow writes `.dev.vars` from `DEV_VARS` and runs `pnpm secrets:bulk` automatically
+- Upload secrets (deploys immediately): `pnpm secrets:bulk`
+- Deploy workers: `pnpm deploy`
+- Optional env: `pnpm secrets:bulk -- --env <name>` and `pnpm deploy -- --env <name>`
 
 Optional CI-style gate:
 
